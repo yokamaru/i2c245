@@ -1,3 +1,9 @@
+//
+// I2C245
+// I2C Master for FT245R
+//
+// Based on Maxim(Dallas) AN3315
+//
 
 #include <ftdi.h>
 
@@ -48,7 +54,44 @@ int i2c245_close_device()
     return 1;
 }
 
+/*
+ * Performs start condition
+ */
 int i2c245_start()
 {
+    unsigned char buf;
 
+    ftdi_read_data(&ftdic, buf, sizeof(buf));
+
+    // Set SDA high
+    buf = buf & 0xFF;
+
+    // Set SCL high
+    buf = buf & 0xFF;
+
+    // Bring SDA low
+    buf = buf | 0xFF;
+
+    // Bring SCL low
+    buf = buf | 0xFF;
+
+    return 1;
+}
+
+/*
+ * Performs stop condition
+ */
+int i2c245_stop()
+{
+    unsigned char buf;
+
+    ftdi_read_data(&ftdic, buf, sizeof(buf));
+
+    // Make SCL low
+
+    // Make SDA low
+
+    // Bring SCL high
+
+    // Bring SDA high
 }
