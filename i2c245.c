@@ -10,17 +10,27 @@
 /*
  * Device handle
  */
-struct ftdi_context ftdic;
+static struct ftdi_context ftdic;
+
+/*
+ * Pin assign
+ */
+static struct {
+    int scl;
+    int sda_in;
+    int sda_out;
+} pin_assign;
 
 /*
  * Initialize FT245RL
  */
-int i2c245_init_device()
+int i2c245_init_device(int vendor, int product, int scl, int sda_in, int sda_out)
 {
     int f;
+    unsigned char bitmask;
 
     ftdi_init(&ftdic);
-    f = ftdi_usb_open(&ftdic, 0x0403, 0x6001);
+    f = ftdi_usb_open(&ftdic, vendor, product);
 
     // return error when cannnot open device.
     if (f < 0 && f != -5)
@@ -28,10 +38,18 @@ int i2c245_init_device()
         return -1;
     }
 
+    // Set pin assign
+    // TODO: check given value
+    pin_assign.scl = scl;
+    pin_assign.sda_in = sda_in;
+    pin_assign.sda_out = sda_out;
+
     // Set bitbang mode(after reset bitbang mode)
-    f = ftdi_set_bitmode(&ftdic, 0x00, BITMODE_RESET);
-    sleep(1);
-    f = ftdi_set_bitmode(&ftdic, 0x00, BITMODE_RESET);
+    bitmask = (0x01 << pin_assign.scl) | (0x01 << pin_assign.sda_out);
+
+    f = ftdi_set_bitmode(&ftdic, 0xFF, BITMODE_RESET);
+    usleep(500);
+    f = ftdi_set_bitmode(&ftdic, bitmask, BITMODE_BITBANG);
 
     // return error when cannot set bitbang mode.
     if (f < 0)
@@ -61,7 +79,7 @@ int i2c245_start()
 {
     unsigned char buf;
 
-    ftdi_read_data(&ftdic, buf, sizeof(buf));
+    ftdi_read_data(&ftdic, &buf, sizeof(buf));
 
     // Set SDA high
     buf = buf & 0xFF;
@@ -85,7 +103,7 @@ int i2c245_stop()
 {
     unsigned char buf;
 
-    ftdi_read_data(&ftdic, buf, sizeof(buf));
+    ftdi_read_data(&ftdic, &buf, sizeof(buf));
 
     // Make SCL low
 
@@ -94,4 +112,31 @@ int i2c245_stop()
     // Bring SCL high
 
     // Bring SDA high
+}
+
+/*
+ * Set SCL level
+ */
+static int set_scl(int value)
+{
+
+    return 1;
+}
+
+/*
+ * Set SDA level
+ */
+static int set_sda(int value)
+{
+
+    return 1;
+}
+
+/**
+ * Get SDA level
+ */
+static int get_sda()
+{
+
+    return 1;
 }
