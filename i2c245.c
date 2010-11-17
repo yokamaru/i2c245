@@ -7,12 +7,12 @@
 
 #include <ftdi.h>
 
-/*
+/**
  * Device handle
  */
 static struct ftdi_context ftdic;
 
-/*
+/**
  * Pin assign
  */
 static struct {
@@ -21,7 +21,7 @@ static struct {
     int sda_out;
 } pin_assign;
 
-/*
+/**
  * Initialize FT245RL
  */
 int i2c245_init_device(int vendor, int product, int scl, int sda_in, int sda_out)
@@ -60,7 +60,7 @@ int i2c245_init_device(int vendor, int product, int scl, int sda_in, int sda_out
     return 1;
 }
 
-/*
+/**
  * Close connection to FT245RL
  */
 int i2c245_close_device()
@@ -72,7 +72,7 @@ int i2c245_close_device()
     return 1;
 }
 
-/*
+/**
  * Performs start condition
  */
 int i2c245_start()
@@ -96,7 +96,7 @@ int i2c245_start()
     return 1;
 }
 
-/*
+/**
  * Performs stop condition
  */
 int i2c245_stop()
@@ -114,20 +114,62 @@ int i2c245_stop()
     // Bring SDA high
 }
 
-/*
- * Set SCL level
+/**
+ * Set SCL high
  */
-static int set_scl(int value)
+static int set_scl_high()
 {
+    unsigned char buf;
+
+    // TODO: check return value of libftdi's functions
+    ftdi_read_data(&ftdic, &buf, sizeof(buf));
+    buf |= 0x01 << pin_assign.scl;
+    ftdi_write_data(&ftdic, &buf, sizeof(buf));
 
     return 1;
 }
 
-/*
- * Set SDA level
+/**
+ * Set SCL low
  */
-static int set_sda(int value)
+static int set_scl_low()
 {
+    unsigned char buf;
+
+    // TODO: check return value of libftdi's functions
+    ftdi_read_data(&ftdic, &buf, sizeof(buf));
+    buf &= ~(0x01 << pin_assign.scl);
+    ftdi_write_data(&ftdic, &buf, sizeof(buf));
+
+    return 1;
+}
+
+/**
+ * Set SDA high
+ */
+static int set_sda_high()
+{
+    unsigned char buf;
+
+    // TODO: check return value of libftdi's functions
+    ftdi_read_data(&ftdic, &buf, sizeof(buf));
+    buf &= ~(0x01 << pin_assign.sda_out);
+    ftdi_write_data(&ftdic, &buf, sizeof(buf));
+
+    return 1;
+}
+
+/**
+ * Set SDA low
+ */
+static int set_sda_low()
+{
+    unsigned char buf;
+
+    // TODO: check return value of libftdi's functions
+    ftdi_read_data(&ftdic, &buf, sizeof(buf));
+    buf &= ~(0x01 << pin_assign.sda_out);
+    ftdi_write_data(&ftdic, &buf, sizeof(buf));
 
     return 1;
 }
@@ -137,6 +179,12 @@ static int set_sda(int value)
  */
 static int get_sda()
 {
+    unsigned char buf;
+    int level;
 
-    return 1;
+    // TODO: check return value of libftdi's functions
+    ftdi_read_data(&ftdic, &buf, sizeof(buf));
+    level = (buf >> pin_assign.sda_in) & 1;
+
+    return level;
 }
