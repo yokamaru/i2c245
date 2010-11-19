@@ -82,16 +82,13 @@ int i2c245_start()
     ftdi_read_data(&ftdic, &buf, sizeof(buf));
 
     // Set SDA high
-    buf = buf & 0xFF;
-
+    set_sda_high();
     // Set SCL high
-    buf = buf & 0xFF;
-
+    set_scl_high();
     // Bring SDA low
-    buf = buf | 0xFF;
-
+    set_sda_low();
     // Bring SCL low
-    buf = buf | 0xFF;
+    set_scl_low();
 
     return 1;
 }
@@ -106,12 +103,13 @@ int i2c245_stop()
     ftdi_read_data(&ftdic, &buf, sizeof(buf));
 
     // Make SCL low
-
+    set_scl_low();
     // Make SDA low
-
+    set_sda_low();
     // Bring SCL high
-
+    set_sda_high();
     // Bring SDA high
+    set_slc_high();
 }
 
 /**
