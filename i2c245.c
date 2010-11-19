@@ -6,6 +6,11 @@
 //
 
 #include <ftdi.h>
+#include <time.h>
+
+enum {
+    DELAY_NSEC = 6000000; // default delay(6ms)
+}
 
 /**
  * Device handle
@@ -21,6 +26,11 @@ static struct {
     int sda_out;
 } pin_assign;
 
+static struct {
+    int nsec;
+} tv_nsec;
+
+
 /**
  * Initialize FT245RL
  */
@@ -28,6 +38,9 @@ int i2c245_init_device(int vendor, int product, int scl, int sda_in, int sda_out
 {
     int f;
     unsigned char bitmask;
+
+    // Set delay to default
+    i2c245_set_delay(DELAY_NSEC);
 
     ftdi_init(&ftdic);
     f = ftdi_usb_open(&ftdic, vendor, product);
@@ -113,6 +126,14 @@ int i2c245_stop()
 }
 
 /**
+ * Set delay time
+ */
+int i2c245_set_delay(int nsec)
+{
+    tv_nsec = nsec;
+}
+
+/**
  * Set SCL high
  */
 static int set_scl_high()
@@ -185,4 +206,14 @@ static int get_sda()
     level = (buf >> pin_assign.sda_in) & 1;
 
     return level;
+}
+
+static int delay(double multiple)
+{
+    struct timespec req;
+
+    req.tv_sec  = 0;
+    req.tv_nsec = tv_nsec * multiple;
+
+    return nanosleep(&req, NULL);
 }
