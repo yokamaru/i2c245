@@ -5,30 +5,9 @@
 // Based on Maxim(Dallas) AN3315
 //
 
+#include "i2c245.h"
 #include <ftdi.h>
 #include <time.h>
-
-enum {
-    DELAY_NSEC = 6000000; // default delay(6ms)
-}
-
-/**
- * Device handle
- */
-static struct ftdi_context ftdic;
-
-/**
- * Pin assign
- */
-static struct {
-    int scl;
-    int sda_in;
-    int sda_out;
-} pin_assign;
-
-static struct {
-    int nsec;
-} tv_nsec;
 
 
 /**
@@ -96,12 +75,16 @@ int i2c245_start()
 
     // Set SDA high
     set_sda_high();
+    delay(0.5);
     // Set SCL high
     set_scl_high();
+    delay(0.5);
     // Bring SDA low
     set_sda_low();
+    delay(0.5);
     // Bring SCL low
     set_scl_low();
+    delay(0.5);
 
     return 1;
 }
@@ -117,12 +100,18 @@ int i2c245_stop()
 
     // Make SCL low
     set_scl_low();
+    delay(0.5);
     // Make SDA low
     set_sda_low();
+    delay(0.5);
     // Bring SCL high
     set_sda_high();
+    delay(0.5);
     // Bring SDA high
-    set_slc_high();
+    set_scl_high();
+    delay(0.5);
+
+    return 1;
 }
 
 /**
@@ -130,7 +119,9 @@ int i2c245_stop()
  */
 int i2c245_set_delay(int nsec)
 {
-    tv_nsec = nsec;
+    tv_nsec.nsec = nsec;
+
+    return 1;
 }
 
 /**
@@ -213,7 +204,7 @@ static int delay(double multiple)
     struct timespec req;
 
     req.tv_sec  = 0;
-    req.tv_nsec = tv_nsec * multiple;
+    req.tv_nsec = tv_nsec.nsec * multiple;
 
     return nanosleep(&req, NULL);
 }
