@@ -12,6 +12,7 @@ LD = ld
 AR = ar
 RM = rm -f
 LN = ln -sf
+INS = install
 
 DEBUG = -g -Wall
 CFLAGS	= -O2 $(DEBUG)
@@ -35,6 +36,13 @@ $(LIBNAME).o: $(PROGRAM).c
 
 clean:
 	$(RM) $(LIBNAME)*
+
+install:
+	$(INS) -m 755 -g root -o root $(LIBNAME).so.$(LIB_MAJOR).$(LIB_MINOR) /usr/lib64/
+	cd /usr/lib64/
+	$(LN) $(LIBNAME).so.$(LIB_MAJOR).$(LIB_MINOR) $(LIBNAME).so.$(LIB_MAJOR)
+	$(LN) $(LIBNAME).so.$(LIB_MAJOR) $(LIBNAME).so
+#	ldconfig
 
 tags:
 	etags *.f
