@@ -181,45 +181,6 @@ int i2c245_write(unsigned char *data)
     return 0;
 }
 
-static int getbyte_sda(unsigned char *state_buf, int state_buf_size,
-                       unsigned char *read_data)
-{
-    unsigned char read_buf;
-    int read_level;
-    int i;
-
-    read_buf = 0x00;
-
-    // Set SDA high and SCL low
-    set_sda_high(&state_buf, state_buf_size);
-    set_scl_low(&state_buf, state_buf_size);
-    delay(0.5);
-
-    for (i = 0; i < 8; i++)
-    {
-        // Set SCL high
-        set_scl_high(&state_buf, state_buf_size);
-        delay(0.5);
-
-        // Read SDA
-        read_level = get_sda();
-
-        // Set SCL low
-        set_scl_low(&state_buf, state_buf_size);
-        delay(0.5);
-
-        // TODO: Research state (is inverted?)
-        read_buf = read_buf << 1;
-        if (read_level == 1)
-        {
-            read_buf |= 0x01;
-        }
-    }
-
-    *read_data = read_buf;
-
-    return 0;
-}
 
 /**
  * Read data without ack
@@ -370,6 +331,49 @@ static int get_sda()
     level = (buf >> pin_assign.sda_in) & 0x01;
 
     return level;
+}
+
+/**
+ * Get SDA levels
+ */
+static int getbyte_sda(unsigned char *state_buf, int state_buf_size,
+                       unsigned char *read_data)
+{
+    unsigned char read_buf;
+    int read_level;
+    int i;
+
+    read_buf = 0x00;
+
+    // Set SDA high and SCL low
+    set_sda_high(state_buf, state_buf_size);
+    set_scl_low(state_buf, state_buf_size);
+    delay(0.5);
+
+    for (i = 0; i < 8; i++)
+    {
+        // Set SCL high
+        set_scl_high(state_buf, state_buf_size);
+        delay(0.5);
+
+        // Read SDA
+        read_level = get_sda();
+
+        // Set SCL low
+        set_scl_low(state_buf, state_buf_size);
+        delay(0.5);
+
+        // TODO: Research state (is inverted?)
+        read_buf = read_buf << 1;
+        if (read_level == 1)
+        {
+            read_buf |= 0x01;
+        }
+    }
+
+    *read_data = read_buf;
+
+    return 0;
 }
 
 static int delay(double multiple)

@@ -34,11 +34,16 @@ int i2c245_init_device(int vendor, int product, int scl, int sda_in, int sda_out
 int i2c245_close_device();
 int i2c245_start();
 int i2c245_stop();
+int i2c245_write(unsigned char *data);
+int i2c245_read_nack(unsigned char *read_data);
+int i2c245_read_ack(unsigned char *read_data);
 int i2c245_set_delay(int nsec);
 
-static int set_scl_high();
-static int set_scl_low();
-static int set_sda_high();
-static int set_sda_low();
+static int set_scl_high(unsigned char *buf, int size);
+static int set_scl_low(unsigned char *buf, int size);
+static int set_sda_high(unsigned char *buf, int size);
+static int set_sda_low(unsigned char *buf, int size);
 static int get_sda();
+static int getbyte_sda(unsigned char *state_buf, int state_buf_size,
+                       unsigned char *read_data);
 static int delay(double multiple);
