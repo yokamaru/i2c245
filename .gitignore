@@ -1,4 +1,5 @@
 2wire.c
 lib*
 build
+*.pyc
 TAGS
