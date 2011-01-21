@@ -81,10 +81,10 @@ int i2c245_start()
     // Set SCL high
     set_scl_high(&buf, buf_size);
     delay(0.5);
-    // Bring SDA low
+    // Set SDA low
     set_sda_low(&buf, buf_size);
     delay(0.5);
-    // Bring SCL low
+    // Set SCL low
     set_scl_low(&buf, buf_size);
     delay(0.5);
 
@@ -102,20 +102,201 @@ int i2c245_stop()
     buf_size = sizeof(buf);
     ftdi_read_data(&ftdic, &buf, buf_size);
 
-    // Make SCL low
+    // Set SCL low
     set_scl_low(&buf, buf_size);
     delay(0.5);
-    // Make SDA low
+    // Set SDA low
     set_sda_low(&buf, buf_size);
     delay(0.5);
-    // Bring SCL high
+    // Set SCL high
     set_sda_high(&buf, buf_size);
     delay(0.5);
-    // Bring SDA high
+    // Set SDA high
     set_scl_high(&buf, buf_size);
     delay(0.5);
 
     return 1;
+}
+
+/**
+ * Write data
+ */
+int i2c245_write(unsigned char *data)
+{
+    unsigned char write_queue;
+    unsigned char state_buf;
+    int buf_size;
+    int i;
+
+    buf_size = sizeof(state_buf);
+    ftdi_read_data(&ftdic, &state_buf, buf_size);
+
+    write_queue = *data;
+
+    for (i = 0; i < 8; i++)
+    {
+        if (write_queue & 0x80)
+        {
+            // Write '1'
+
+            // Set SDA high
+            set_sda_high(&state_buf, buf_size);
+            delay(0.5);
+
+            // Supply clock
+            set_scl_high(&state_buf, buf_size);
+            delay(0.5);
+            set_scl_low(&state_buf, buf_size);
+            delay(0.5);
+
+            // Set SDA low
+            set_sda_low(&state_buf, buf_size);
+            delay(0.5);
+        }
+        else
+        {
+            // Write '0'
+
+            // Set SDA low
+            set_sda_low(&state_buf, buf_size);
+            delay(0.5);
+
+            // Supply clock
+            set_scl_high(&state_buf, buf_size);
+            delay(0.5);
+            set_scl_low(&state_buf, buf_size);
+            delay(0.5);
+        }
+
+        write_queue = write_queue << 1;
+    }
+
+    // Release SDA(same as set sda high)
+    set_sda_high(&state_buf, buf_size);
+    delay(0.5);
+
+
+    // TODO: check ACK/NACK from slave
+
+    return 0;
+}
+
+static int getbyte_sda(unsigned char *state_buf, int state_buf_size,
+                       unsigned char *read_data)
+{
+    unsigned char read_buf;
+    int read_level;
+    int i;
+
+    read_buf = 0x00;
+
+    // Set SDA high and SCL low
+    set_sda_high(&state_buf, state_buf_size);
+    set_scl_low(&state_buf, state_buf_size);
+    delay(0.5);
+
+    for (i = 0; i < 8; i++)
+    {
+        // Set SCL high
+        set_scl_high(&state_buf, state_buf_size);
+        delay(0.5);
+
+        // Read SDA
+        read_level = get_sda();
+
+        // Set SCL low
+        set_scl_low(&state_buf, state_buf_size);
+        delay(0.5);
+
+        // TODO: Research state (is inverted?)
+        read_buf = read_buf << 1;
+        if (read_level == 1)
+        {
+            read_buf |= 0x01;
+        }
+    }
+
+    *read_data = read_buf;
+
+    return 0;
+}
+
+/**
+ * Read data without ack
+ */
+int i2c245_read_nack(unsigned char *read_data)
+{
+    unsigned char read_buf;
+    unsigned char state_buf;
+    int state_buf_size;
+
+    read_buf = 0x00;
+
+    state_buf_size = sizeof(state_buf);
+    ftdi_read_data(&ftdic, &state_buf, state_buf_size);
+
+    // Read SDA
+    getbyte_sda(&state_buf, state_buf_size, &read_buf);
+
+    //
+    // reply nack
+    //
+    // Set SDA high
+    set_sda_high(&state_buf, state_buf_size);
+    delay(0.5);
+
+    // Set SCL high
+    set_scl_high(&state_buf, state_buf_size);
+    delay(0.5);
+
+    // Set SCL low
+    set_scl_low(&state_buf, state_buf_size);
+    delay(0.5);
+
+    *read_data = read_buf;
+
+    return 0;
+}
+
+/**
+ * Read data with ack
+ */
+int i2c245_read_ack(unsigned char *read_data)
+{
+    unsigned char read_buf;
+    unsigned char state_buf;
+    int state_buf_size;
+
+    read_buf = 0x00;
+
+    state_buf_size = sizeof(state_buf);
+    ftdi_read_data(&ftdic, &state_buf, state_buf_size);
+
+    // Read SDA
+    getbyte_sda(&state_buf, state_buf_size, &read_buf);
+
+    //
+    // reply ack
+    //
+    // Set SDA low
+    set_sda_low(&state_buf, state_buf_size);
+    delay(0.5);
+
+    // Set SCL high
+    set_scl_high(&state_buf, state_buf_size);
+    delay(0.5);
+
+    // Set SCL low
+    set_scl_low(&state_buf, state_buf_size);
+    delay(0.5);
+
+    // Set SSA high
+    set_sda_high(&state_buf, state_buf_size);
+    delay(0.5);
+
+    *read_data = read_buf;
+
+    return 0;
 }
 
 /**
@@ -186,7 +367,7 @@ static int get_sda()
 
     // TODO: check return value of libftdi's functions
     ftdi_read_data(&ftdic, &buf, sizeof(buf));
-    level = (buf >> pin_assign.sda_in) & 1;
+    level = (buf >> pin_assign.sda_in) & 0x01;
 
     return level;
 }
