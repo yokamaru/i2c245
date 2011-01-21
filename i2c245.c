@@ -70,20 +70,22 @@ int i2c245_close_device()
 int i2c245_start()
 {
     unsigned char buf;
+    int buf_size;
 
-    ftdi_read_data(&ftdic, &buf, sizeof(buf));
+    buf_size = sizeof(buf);
+    ftdi_read_data(&ftdic, &buf, buf_size);
 
     // Set SDA high
-    set_sda_high();
+    set_sda_high(&buf, buf_size);
     delay(0.5);
     // Set SCL high
-    set_scl_high();
+    set_scl_high(&buf, buf_size);
     delay(0.5);
     // Bring SDA low
-    set_sda_low();
+    set_sda_low(&buf, buf_size);
     delay(0.5);
     // Bring SCL low
-    set_scl_low();
+    set_scl_low(&buf, buf_size);
     delay(0.5);
 
     return 1;
@@ -95,20 +97,22 @@ int i2c245_start()
 int i2c245_stop()
 {
     unsigned char buf;
+    int buf_size;
 
-    ftdi_read_data(&ftdic, &buf, sizeof(buf));
+    buf_size = sizeof(buf);
+    ftdi_read_data(&ftdic, &buf, buf_size);
 
     // Make SCL low
-    set_scl_low();
+    set_scl_low(&buf, buf_size);
     delay(0.5);
     // Make SDA low
-    set_sda_low();
+    set_sda_low(&buf, buf_size);
     delay(0.5);
     // Bring SCL high
-    set_sda_high();
+    set_sda_high(&buf, buf_size);
     delay(0.5);
     // Bring SDA high
-    set_scl_high();
+    set_scl_high(&buf, buf_size);
     delay(0.5);
 
     return 1;
@@ -127,14 +131,11 @@ int i2c245_set_delay(int nsec)
 /**
  * Set SCL high
  */
-static int set_scl_high()
+static int set_scl_high(unsigned char *buf, int size)
 {
-    unsigned char buf;
-
     // TODO: check return value of libftdi's functions
-    ftdi_read_data(&ftdic, &buf, sizeof(buf));
-    buf |= 0x01 << pin_assign.scl;
-    ftdi_write_data(&ftdic, &buf, sizeof(buf));
+    *buf |= 0x01 << pin_assign.scl;
+    ftdi_write_data(&ftdic, buf, size);
 
     return 1;
 }
@@ -142,14 +143,11 @@ static int set_scl_high()
 /**
  * Set SCL low
  */
-static int set_scl_low()
+static int set_scl_low(unsigned char *buf, int size)
 {
-    unsigned char buf;
-
     // TODO: check return value of libftdi's functions
-    ftdi_read_data(&ftdic, &buf, sizeof(buf));
-    buf &= ~(0x01 << pin_assign.scl);
-    ftdi_write_data(&ftdic, &buf, sizeof(buf));
+    *buf &= ~(0x01 << pin_assign.scl);
+    ftdi_write_data(&ftdic, buf, size);
 
     return 1;
 }
@@ -157,14 +155,11 @@ static int set_scl_low()
 /**
  * Set SDA high
  */
-static int set_sda_high()
+static int set_sda_high(unsigned char *buf, int size)
 {
-    unsigned char buf;
-
     // TODO: check return value of libftdi's functions
-    ftdi_read_data(&ftdic, &buf, sizeof(buf));
-    buf |= 0x01 << pin_assign.sda_out;
-    ftdi_write_data(&ftdic, &buf, sizeof(buf));
+    *buf |= 0x01 << pin_assign.sda_out;
+    ftdi_write_data(&ftdic, buf, size);
 
     return 1;
 }
@@ -172,14 +167,11 @@ static int set_sda_high()
 /**
  * Set SDA low
  */
-static int set_sda_low()
+static int set_sda_low(unsigned char *buf, int size)
 {
-    unsigned char buf;
-
-    // TODO: check return value of libftdi's functions
-    ftdi_read_data(&ftdic, &buf, sizeof(buf));
-    buf &= ~(0x01 << pin_assign.sda_out);
-    ftdi_write_data(&ftdic, &buf, sizeof(buf));
+    // TODO: check return value of libftdi's Functions
+    *buf &= ~(0x01 << pin_assign.sda_out);
+    ftdi_write_data(&ftdic, buf, size);
 
     return 1;
 }
