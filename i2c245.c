@@ -5,10 +5,12 @@
 // Based on Maxim(Dallas) AN3315
 //
 
-#include "i2c245.h"
 #include <ftdi.h>
 #include <time.h>
 
+#include "i2c245.h"
+
+#define _POSIX_C_SOURCE 199309
 
 /**
  * Initialize FT245RL
@@ -20,7 +22,7 @@ int i2c245_init_device(int vendor, int product, int scl,
     unsigned char bitmask;
 
     // Set delay to default
-    i2c245_set_delay(DELAY_NSEC);
+    i2c245_set_delay(0, DELAY_NSEC);
 
     ftdi_init(&ftdic);
     f = ftdi_usb_open(&ftdic, vendor, product);
@@ -263,9 +265,10 @@ int i2c245_read_ack(unsigned char *read_data)
 /**
  * Set delay time
  */
-int i2c245_set_delay(int nsec)
+int i2c245_set_delay(time_t sec, long nsec)
 {
-    tv_nsec.nsec = nsec;
+    tv_delay.sec = sec;
+    tv_delay.nsec = nsec;
 
     return 1;
 }
@@ -379,9 +382,16 @@ static int getbyte_sda(unsigned char *state_buf, int state_buf_size,
 static int delay(double multiple)
 {
     struct timespec req;
+    long long int time_total;
 
-    req.tv_sec  = 0;
-    req.tv_nsec = tv_nsec.nsec * multiple;
+    req.tv_sec  = tv_delay.sec;
+    req.tv_nsec = tv_delay.nsec * multiple;
+
+    // FIXME: overflow time_total
+    time_total = (tv_delay.sec * 1e9 + tv_delay.nsec) * multiple;
+
+    req.tv_sec = (long)time_total / 1e9;
+    req.tv_nsec = (time_t)(time_total - req.tv_sec * 1e9);
 
     return nanosleep(&req, NULL);
 }

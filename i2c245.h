@@ -2,6 +2,9 @@
 //  i2c245.h
 //
 
+#include <ftdi.h>
+#include <time.h>
+
 /**
  * Default delay length
  */
@@ -12,7 +15,7 @@ enum {
 /**
  * Device handle
  */
-static struct ftdi_context ftdic;
+struct ftdi_context ftdic;
 
 /**
  * Pin assign
@@ -27,8 +30,9 @@ static struct {
  * Delay length[nanosec]
  */
 static struct {
-    int nsec;
-} tv_nsec;
+    time_t sec;
+    long nsec;
+} tv_delay;
 
 int i2c245_init_device(int vendor, int product, int scl, int sda_in, int sda_out);
 int i2c245_close_device();
@@ -37,7 +41,7 @@ int i2c245_stop();
 int i2c245_write(unsigned char *data);
 int i2c245_read_nack(unsigned char *read_data);
 int i2c245_read_ack(unsigned char *read_data);
-int i2c245_set_delay(int nsec);
+int i2c245_set_delay(time_t sec, long nsec);
 
 static int set_scl_high(unsigned char *buf, int size);
 static int set_scl_low(unsigned char *buf, int size);
