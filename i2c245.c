@@ -13,7 +13,8 @@
 /**
  * Initialize FT245RL
  */
-int i2c245_init_device(int vendor, int product, int scl, int sda_in, int sda_out)
+int i2c245_init_device(int vendor, int product, int scl,
+                       int sda_in, int sda_out)
 {
     int f;
     unsigned char bitmask;
@@ -38,7 +39,6 @@ int i2c245_init_device(int vendor, int product, int scl, int sda_in, int sda_out
 
     // Set bitbang mode(after reset bitbang mode)
     bitmask = (0x01 << pin_assign.scl) | (0x01 << pin_assign.sda_out);
-
     f = ftdi_set_bitmode(&ftdic, 0xFF, BITMODE_RESET);
     usleep(500);
     f = ftdi_set_bitmode(&ftdic, bitmask, BITMODE_BITBANG);
@@ -163,7 +163,7 @@ static int set_sda_high()
 
     // TODO: check return value of libftdi's functions
     ftdi_read_data(&ftdic, &buf, sizeof(buf));
-    buf &= ~(0x01 << pin_assign.sda_out);
+    buf |= 0x01 << pin_assign.sda_out;
     ftdi_write_data(&ftdic, &buf, sizeof(buf));
 
     return 1;
