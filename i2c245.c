@@ -279,7 +279,7 @@ int i2c245_set_delay(time_t sec, long nsec)
 static int set_scl_high(unsigned char *buf, int size)
 {
     // TODO: check return value of libftdi's functions
-    *buf |= 0x01 << pin_assign.scl;
+    *buf &= ~(0x01 << pin_assign.scl);
     ftdi_write_data(&ftdic, buf, size);
 
     return 1;
@@ -291,7 +291,7 @@ static int set_scl_high(unsigned char *buf, int size)
 static int set_scl_low(unsigned char *buf, int size)
 {
     // TODO: check return value of libftdi's functions
-    *buf &= ~(0x01 << pin_assign.scl);
+    *buf |= 0x01 << pin_assign.scl;
     ftdi_write_data(&ftdic, buf, size);
 
     return 1;
@@ -303,7 +303,7 @@ static int set_scl_low(unsigned char *buf, int size)
 static int set_sda_high(unsigned char *buf, int size)
 {
     // TODO: check return value of libftdi's functions
-    *buf |= 0x01 << pin_assign.sda_out;
+    *buf &= ~(0x01 << pin_assign.sda_out);
     ftdi_write_data(&ftdic, buf, size);
 
     return 1;
@@ -315,7 +315,7 @@ static int set_sda_high(unsigned char *buf, int size)
 static int set_sda_low(unsigned char *buf, int size)
 {
     // TODO: check return value of libftdi's Functions
-    *buf &= ~(0x01 << pin_assign.sda_out);
+    *buf |= 0x01 << pin_assign.sda_out;
     ftdi_write_data(&ftdic, buf, size);
 
     return 1;
@@ -323,6 +323,9 @@ static int set_sda_low(unsigned char *buf, int size)
 
 /**
  * Get SDA level
+ *
+ * This function return "sense" level.
+ * Signal is inverted on 7405. So '0' means '1', also '1' means '0'.
  */
 static int get_sda()
 {
@@ -331,7 +334,7 @@ static int get_sda()
 
     // TODO: check return value of libftdi's functions
     ftdi_read_data(&ftdic, &buf, sizeof(buf));
-    level = (buf >> pin_assign.sda_in) & 0x01;
+    level = ~(buf >> pin_assign.sda_in) & 0x01;
 
     return level;
 }
@@ -366,7 +369,6 @@ static int getbyte_sda(unsigned char *state_buf, int state_buf_size,
         set_scl_low(state_buf, state_buf_size);
         delay(0.5);
 
-        // TODO: Research state (is inverted?)
         read_buf = read_buf << 1;
         if (read_level == 1)
         {
