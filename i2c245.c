@@ -75,7 +75,7 @@ int i2c245_start()
     int buf_size;
 
     buf_size = sizeof(buf);
-    ftdi_read_data(&ftdic, &buf, buf_size);
+    ftdi_read_pins(&ftdic, &buf);
 
     // Set SDA high
     set_sda_high(&buf, buf_size);
@@ -102,7 +102,7 @@ int i2c245_stop()
     int buf_size;
 
     buf_size = sizeof(buf);
-    ftdi_read_data(&ftdic, &buf, buf_size);
+    ftdi_read_pins(&ftdic, &buf);
 
     // Set SCL low
     set_scl_low(&buf, buf_size);
@@ -132,7 +132,7 @@ int i2c245_write(unsigned char *data)
     int ack_reveiver;
 
     buf_size = sizeof(state_buf);
-    ftdi_read_data(&ftdic, &state_buf, buf_size);
+    ftdi_read_pins(&ftdic, &state_buf);
 
     write_queue = *data;
 
@@ -207,7 +207,7 @@ int i2c245_read_nack(unsigned char *read_data)
     read_buf = 0x00;
 
     state_buf_size = sizeof(state_buf);
-    ftdi_read_data(&ftdic, &state_buf, state_buf_size);
+    ftdi_read_pins(&ftdic, &state_buf);
 
     // Read SDA
     getbyte_sda(&state_buf, state_buf_size, &read_buf);
@@ -244,7 +244,7 @@ int i2c245_read_ack(unsigned char *read_data)
     read_buf = 0x00;
 
     state_buf_size = sizeof(state_buf);
-    ftdi_read_data(&ftdic, &state_buf, state_buf_size);
+    ftdi_read_pins(&ftdic, &state_buf);
 
     // Read SDA
     getbyte_sda(&state_buf, state_buf_size, &read_buf);
