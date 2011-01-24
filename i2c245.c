@@ -111,10 +111,10 @@ int i2c245_stop()
     set_sda_low(&buf, buf_size);
     delay(0.5);
     // Set SCL high
-    set_sda_high(&buf, buf_size);
+    set_scl_high(&buf, buf_size);
     delay(0.5);
     // Set SDA high
-    set_scl_high(&buf, buf_size);
+    set_sda_high(&buf, buf_size);
     delay(0.5);
 
     return 1;
@@ -129,6 +129,7 @@ int i2c245_write(unsigned char *data)
     unsigned char state_buf;
     int buf_size;
     int i;
+    int ack_reveiver;
 
     buf_size = sizeof(state_buf);
     ftdi_read_data(&ftdic, &state_buf, buf_size);
@@ -177,10 +178,20 @@ int i2c245_write(unsigned char *data)
     set_sda_high(&state_buf, buf_size);
     delay(0.5);
 
+    // Check ACK/NACK
 
-    // TODO: check ACK/NACK from slave
+    // Set SCL High
+    set_scl_high(&state_buf, buf_size);
+    delay(0.5);
 
-    return 0;
+    // Read SDA
+    ack_reveiver = get_sda();
+
+    // Set SCL low
+    set_scl_low(&state_buf, buf_size);
+    delay(0.5);
+
+    return ack_reveiver;
 }
 
 
@@ -253,7 +264,7 @@ int i2c245_read_ack(unsigned char *read_data)
     set_scl_low(&state_buf, state_buf_size);
     delay(0.5);
 
-    // Set SSA high
+    // Set SDA high
     set_sda_high(&state_buf, state_buf_size);
     delay(0.5);
 
@@ -333,8 +344,8 @@ static int get_sda()
     int level;
 
     // TODO: check return value of libftdi's functions
-    ftdi_read_data(&ftdic, &buf, sizeof(buf));
-    level = ~(buf >> pin_assign.sda_in) & 0x01;
+    ftdi_read_pins(&ftdic, &buf);
+    level = (buf >> pin_assign.sda_in) & 0x01;
 
     return level;
 }
